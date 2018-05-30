@@ -39,7 +39,7 @@
 #define SCM_TIMESTAMPING SO_TIMESTAMPING
 #endif
 
-struct scm_timestamping {
+struct scm_timestamping_alt {
         struct timespec systime;
         struct timespec hwtimesys;
         struct timespec hwtimeraw;
@@ -140,7 +140,7 @@ void tstamp_mode_kernel(int sock) {
  * \param[in] sock  The socket to activate SO_TIMESTAMPING on (the UDP)
  * \warning         Really sucks in terms of accuracy! Use kernel/hardware
  */
-void tstamp_mode_userland(sock) {
+void tstamp_mode_userland(int sock) {
 	int yes = 1;
 	socklen_t slen;
 	
@@ -164,7 +164,7 @@ void tstamp_mode_userland(sock) {
  */
 int tstamp_extract(struct msghdr *msg, /*@out@*/ ts_t *ts, int tx) {
 	struct cmsghdr *cmsg;
-	struct scm_timestamping *t;
+	struct scm_timestamping_alt *t;
 	ts_t *ts_p;
 	int ok = 0;
 	struct sock_extended_err *err;
@@ -177,7 +177,7 @@ int tstamp_extract(struct msghdr *msg, /*@out@*/ ts_t *ts, int tx) {
 			/* if hw/kernel timestamps, check SO_TIMESTAMPING */
 			if (cfg.ts != USERLAND &&
 					cmsg->cmsg_type == SO_TIMESTAMPING) {
-				t = (struct scm_timestamping *)CMSG_DATA(cmsg);
+				t = (struct scm_timestamping_alt *)CMSG_DATA(cmsg);
 				/*@ -onlytrans Let me copy the timestamp */
 				if (cfg.ts == HARDWARE) *ts = t->hwtimeraw;
 				if (cfg.ts == KERNEL) *ts = t->systime;

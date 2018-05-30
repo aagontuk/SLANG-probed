@@ -51,7 +51,7 @@ int recv_w_ts(int sock, int flags, /*@out@*/ pkt_t *pkt) {
 	memset(&(pkt->data), 0, DATALEN);
 	memset(msg, 0, sizeof *msg);
 	addrlen = (socklen_t)sizeof pkt->addr;
-	char da[30];
+	char da[60];
 	if ((flags & MSG_ERRQUEUE) != 0) {
 		iov[0].iov_base = da;
 	} else {
