@@ -105,6 +105,10 @@ static int res_tserror = 0;
 static int res_dserror = 0;
 static int res_dup = 0;
 static long long res_rtt_total = 0;
+static double res_rtt_mean = 0;
+static double res_rtt_delta = 0;
+static double res_rtt_delta2 = 0;
+static double res_rtt_m2 = 0;
 static ts_t res_rtt_min, res_rtt_max;
 
 static void client_res_insert(addr_t *a, data_t *d, ts_t *ts);
@@ -515,6 +519,11 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp) {
 						if (cmp_ts(&res_rtt_min, &rtt) == 1)
 							res_rtt_min = rtt;
 						res_rtt_total = res_rtt_total + rtt.tv_nsec;
+						
+						res_rtt_delta = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
+						res_rtt_mean += res_rtt_delta / (float)r->seq;
+						res_rtt_delta2 = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
+						res_rtt_m2 += res_rtt_delta * res_rtt_delta2;
 					}
 				}
 				/*@ -branchstate -onlytrans TODO wtf */
@@ -570,7 +579,8 @@ void client_res_summary(/*@unused@*/ int sig) {
 	else
 		printf("max: %ld ns", res_rtt_max.tv_nsec);
 	loss = (float)res_rtt_total / (float)res_ok;
-	printf(", avg: %.0f ns", loss);
+	printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
+	printf(", stdev: %.0f ns", res_rtt_m2 / (float)res_ok);
 	if (res_rtt_min.tv_sec > 0)
 		printf(", min: %ld.%09ld\n", res_rtt_min.tv_sec, res_rtt_min.tv_nsec);
 	else
