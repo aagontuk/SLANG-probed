@@ -18,6 +18,7 @@
 #ifndef S_SPLINT_S /* SPlint 3.1.2 bug */
 #include <unistd.h>
 #endif
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -580,7 +581,7 @@ void client_res_summary(/*@unused@*/ int sig) {
 		printf("max: %ld ns", res_rtt_max.tv_nsec);
 	loss = (float)res_rtt_total / (float)res_ok;
 	printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
-	printf(", stdev: %.0f ns", res_rtt_m2 / (float)res_ok);
+	printf(", stdev: %.0f ns", sqrt(res_rtt_m2 / (float)res_ok));
 	if (res_rtt_min.tv_sec > 0)
 		printf(", min: %ld.%09ld\n", res_rtt_min.tv_sec, res_rtt_min.tv_nsec);
 	else
