@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 	/*@ -branchstate OK that opcode. etc changes storage @*/
 	/*@ -unrecog OK that 'getopt' and 'optarg' is missing; SPlint bug */
 	/* +charintliteral OK to compare 'arg' (int) int with char @*/
-	while ((arg = getopt(argc, argv, "hqf:i:p:w:kusc:d:")) != -1) {
+	while ((arg = getopt(argc, argv, "hqf:i:p:w:n:kusc:d:")) != -1) {
 		if (arg == (int)'h') help_and_die();
 		if (arg == (int)'?') exit(EXIT_FAILURE);
 		if (arg == (int)'q') log = 0;
@@ -142,6 +142,7 @@ static void help_and_die(void) {
 	p("\t          OPTIONS");
 	p("\t-f path   Daemon only, path to config file [default: probed.conf]");
 	p("\t-w time   Client only, wait time between PINGs [default 500] (ms)");
+	p("\t-n        Total number of packets to send [default indefinite]");
 	p("\t-i iface  Network interface for hardware timestamps [default: eth0]");
 	p("\t-p port   UDP port, both source and destination [default: 60666]");
 	p("\t-k        Create timestamps in kernel driver instead of hardware");
