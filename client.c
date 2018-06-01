@@ -105,12 +105,23 @@ static int res_pongloss = 0;
 static int res_tserror = 0;
 static int res_dserror = 0;
 static int res_dup = 0;
-static long long res_rtt_total = 0;
 static double res_rtt_mean = 0;
 static double res_rtt_delta = 0;
 static double res_rtt_delta2 = 0;
 static double res_rtt_m2 = 0;
 static ts_t res_rtt_min, res_rtt_max;
+
+static double total_rtt_mean = 0;
+static double total_rtt_delta = 0;
+static double total_rtt_delta2 = 0;
+static double total_rtt_m2 = 0;
+static ts_t total_rtt_min, total_rtt_max;
+
+static double kernel_OH_mean = 0;
+static double kernel_OH_delta = 0;
+static double kernel_OH_delta2 = 0;
+static double kernel_OH_m2 = 0;
+static ts_t kernel_OH_min, kernel_OH_max;
 
 static void client_res_insert(addr_t *a, data_t *d, ts_t *ts);
 static pid_t client_fork(int pipe, addr_t *server);
@@ -131,6 +142,16 @@ void client_init(void) {
 	res_rtt_min.tv_nsec = 0;
 	res_rtt_max.tv_sec = 0;
 	res_rtt_max.tv_nsec = 0;
+	
+	total_rtt_min.tv_sec = -1;
+	total_rtt_min.tv_nsec = 0;
+	total_rtt_max.tv_sec = 0;
+	total_rtt_max.tv_nsec = 0;
+	
+	kernel_OH_min.tv_sec = -1;
+	kernel_OH_min.tv_nsec = 0;
+	kernel_OH_max.tv_sec = 0;
+	kernel_OH_max.tv_nsec = 0;
 	/*@ -nullstate TODO wtf? */
 	return;
 	/*@ +nullstate */
@@ -507,24 +528,53 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 								neg1, neg2, neg3);
 						}
 						if (rtt.tv_sec > 0)
-							printf("Response %4d from %d in %10ld.%09ld\n",
+							printf("Response %4d from %d in %10ld.%09ld s (total "
+							       "%10ld.%09ld s, kernel overhead %10ld.%09ld s\n",
 									(int)r->seq, (int)r->id, rtt.tv_sec,
-									rtt.tv_nsec);
+									rtt.tv_nsec, diff.tv_sec, diff.tv_nsec, 
+									now.tv_sec, now.tv_nsec);
 						else
-							printf("Response %4d from %d in %ld ns\n",
-									(int)r->seq, (int)r->id, rtt.tv_nsec);
+							printf("Response %4d from %d in %ld ns (total "
+							       "%ld ns, kernel overhead %ld ns)\n",
+									(int)r->seq, (int)r->id, rtt.tv_nsec,
+									diff.tv_nsec, now.tv_nsec);
+						/* NIC -> NIC time only */
 						if (cmp_ts(&res_rtt_max, &rtt) == -1)
 							res_rtt_max = rtt;
 						if (res_rtt_min.tv_sec == -1)
 							res_rtt_min = rtt;
 						if (cmp_ts(&res_rtt_min, &rtt) == 1)
-							res_rtt_min = rtt;
-						res_rtt_total = res_rtt_total + rtt.tv_nsec;
-						
+							res_rtt_min = rtt;		
 						res_rtt_delta = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
 						res_rtt_mean += res_rtt_delta / (float)res_ok;
 						res_rtt_delta2 = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
 						res_rtt_m2 += res_rtt_delta * res_rtt_delta2;
+						
+						/* Total ping/pong RTT including Kernel overhead */
+						if (cmp_ts(&total_rtt_max, &diff) == -1)
+							total_rtt_max = diff;
+						if (total_rtt_min.tv_sec == -1)
+							total_rtt_min = diff;
+						if (cmp_ts(&total_rtt_min, &diff) == 1)
+							total_rtt_min = diff;		
+						total_rtt_delta = (diff.tv_sec * 1000000000L + diff.tv_nsec) - total_rtt_mean;
+						total_rtt_mean += total_rtt_delta / (float)res_ok;
+						total_rtt_delta2 = (diff.tv_sec * 1000000000L + diff.tv_nsec) - total_rtt_mean;
+						total_rtt_m2 += total_rtt_delta * total_rtt_delta2;
+						
+						/* Kernel Overhead on server side */
+						if (cmp_ts(&kernel_OH_max, &now) == -1)
+							kernel_OH_max = now;
+						if (kernel_OH_min.tv_sec == -1)
+							kernel_OH_min = now;
+						if (cmp_ts(&kernel_OH_min, &now) == 1)
+							kernel_OH_min = now;		
+						kernel_OH_delta = (now.tv_sec * 1000000000L + now.tv_nsec) - kernel_OH_mean;
+						kernel_OH_mean += kernel_OH_delta / (float)res_ok;
+						kernel_OH_delta2 = (now.tv_sec * 1000000000L + now.tv_nsec) - kernel_OH_mean;
+						kernel_OH_m2 += kernel_OH_delta * kernel_OH_delta2;
+						
+						
 					}
 				}
 				/*@ -branchstate -onlytrans TODO wtf */
@@ -578,12 +628,12 @@ void client_res_summary(/*@unused@*/ int sig) {
 			res_ok, res_dserror, res_tserror, res_dup);
 	printf("%d lost pongs, %d timeouts, %f%% loss\n",
 			res_pongloss, res_timeout, loss);
+	
+	printf("NIC -> NIC RTT - ");
 	if (res_rtt_max.tv_sec > 0)
 		printf("max: %ld.%09ld s", res_rtt_max.tv_sec, res_rtt_max.tv_nsec);
 	else
 		printf("max: %ld ns", res_rtt_max.tv_nsec);
-	//loss = (float)res_rtt_total / (float)res_ok;
-	//printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
 	if (res_rtt_mean >= 1000000000L)
 	    printf(", avg: %ld.%09ld s", (long int)res_rtt_mean / 1000000000L, (long int)res_rtt_mean % 1000000000L);
 	else
@@ -593,6 +643,36 @@ void client_res_summary(/*@unused@*/ int sig) {
 	else
 		printf(", min: %ld ns", res_rtt_min.tv_nsec);
 	printf(", stdev: %.0f ns\n", sqrt(res_rtt_m2 / (float)res_ok));
+	
+	printf("Total RTT - ");
+	if (total_rtt_max.tv_sec > 0)
+		printf("max: %ld.%09ld s", total_rtt_max.tv_sec, total_rtt_max.tv_nsec);
+	else
+		printf("max: %ld ns", total_rtt_max.tv_nsec);
+	if (total_rtt_mean >= 1000000000L)
+	    printf(", avg: %ld.%09ld s", (long int)total_rtt_mean / 1000000000L, (long int)total_rtt_mean % 1000000000L);
+	else
+	    printf(", avg: %.0f ns", total_rtt_mean);
+	if (res_rtt_min.tv_sec > 0)
+		printf(", min: %ld.%09ld s", total_rtt_min.tv_sec, total_rtt_min.tv_nsec);
+	else
+		printf(", min: %ld ns", total_rtt_min.tv_nsec);
+	printf(", stdev: %.0f ns\n", sqrt(total_rtt_m2 / (float)res_ok));
+	
+	printf("Server-Side Kernel Overhead - ");
+	if (kernel_OH_max.tv_sec > 0)
+		printf("max: %ld.%09ld s", kernel_OH_max.tv_sec, kernel_OH_max.tv_nsec);
+	else
+		printf("max: %ld ns", kernel_OH_max.tv_nsec);
+	if (kernel_OH_mean >= 1000000000L)
+	    printf(", avg: %ld.%09ld s", (long int)kernel_OH_mean / 1000000000L, (long int)kernel_OH_mean % 1000000000L);
+	else
+	    printf(", avg: %.0f ns", kernel_OH_mean);
+	if (kernel_OH_min.tv_sec > 0)
+		printf(", min: %ld.%09ld s", kernel_OH_min.tv_sec, kernel_OH_min.tv_nsec);
+	else
+		printf(", min: %ld ns", kernel_OH_min.tv_nsec);
+	printf(", stdev: %.0f ns\n", sqrt(kernel_OH_m2 / (float)res_ok));
 
 	exit(0);
 }
