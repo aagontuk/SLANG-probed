@@ -410,7 +410,7 @@ void client_res_insert(addr_t *a, data_t *d, ts_t *ts) {
  * \param ts Pointer to a timestamp, such as T4
  * \warning  We wait until the next timestamp arrives, before printing
  */
-void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp) {
+void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int npackets) {
 	struct res *r;
 	struct msess *s;
 	struct res_fifo r_fifo;
@@ -431,6 +431,7 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp) {
 		if (r->id == d->id &&
 			r->seq == d->seq &&
 			memcmp(&r->addr, &a->sin6_addr, sizeof r->addr) == 0) {
+			int seq_num = r->seq;
 			if (d->type == TYPE_PONG) {
 				r->state |= MASK_PONG;
 				/* Save T4 timestamp */
@@ -532,6 +533,9 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp) {
 				/*@ +branchstate +onlytrans */
 				free(r);
 			}
+			/* Hack-y, but lets try it... */
+			if (seq_num + 1 > npackets)
+			    raise(SIGINT);
 			return;
 		}
 		/* Alright, next entry */
@@ -579,7 +583,7 @@ void client_res_summary(/*@unused@*/ int sig) {
 		printf("max: %ld.%09ld s", res_rtt_max.tv_sec, res_rtt_max.tv_nsec);
 	else
 		printf("max: %ld ns", res_rtt_max.tv_nsec);
-	loss = (float)res_rtt_total / (float)res_ok;
+	//loss = (float)res_rtt_total / (float)res_ok;
 	//printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
 	if (res_rtt_mean >= 1000000000L)
 	    printf(", avg: %ld.%09ld s", (long int)res_rtt_mean / 1000000000L, (long int)res_rtt_mean % 1000000000L);

@@ -8,7 +8,7 @@
 void client_init(void);
 void client_send_fork(int pipe);
 void client_res_fifo_or_die(char *fifopath);
-void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp);
+void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int npackets);
 void client_res_summary(/*@unused@*/ int sig);
 void client_res_clear_timeouts(void);
 void client_msess_transmit(int s_udp, int sends);

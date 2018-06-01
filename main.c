@@ -33,7 +33,7 @@ static void reload(/*@unused@*/ int sig);
 int main(int argc, char *argv[]) {
 	int arg, s_udp, s_tcp, log;
 	enum tsmode tstamp;
-	char *addr, *iface, *port, *cfgpath, *fifopath, *wait;
+	char *addr, *iface, *port, *cfgpath, *fifopath, *wait, *npackets;
 
 	/* Default settings */
 	cfgpath = "probed.conf";
@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
 	addr = "";
 	fifopath = "";
 	wait = "500";
+	npackets = "-1";
 	count_server_resp = 0;
 	count_client_sent = 0;
 	count_client_done = 0;
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
 		if (arg == (int)'i') iface = optarg;
 		if (arg == (int)'p') port = optarg;
 		if (arg == (int)'w') wait = optarg;
+		if (arg == (int)'n') npackets = optarg;
 		if (arg == (int)'k') tstamp = KERNEL;
 		if (arg == (int)'u') tstamp = USERLAND;
 		if (arg == (int)'s') cfg.op = SERVER;
@@ -93,7 +95,7 @@ int main(int argc, char *argv[]) {
 	if (cfg.op == SERVER) {
 		syslog(LOG_INFO, "Server mode: waiting for PINGs\n");
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath);
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
 	} else if (cfg.op == CLIENT) {
 		/* Create PING results array */
 		client_init();
@@ -105,7 +107,7 @@ int main(int argc, char *argv[]) {
 		/* Print results on Ctrl+C */
 		(void)signal(SIGINT, client_res_summary);
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath);
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
 	} else { /* Implicit cfg.op == DAEMON */
 		p("Daemon mode; both server and client, output to pipe");
 		/* Create PING results array and FIFO */
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]) {
 		/* When loop_or_die starts, reload config immediatelly */
 		cfg.should_reload = 1;
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath);
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
 	}
 	/* We will never get here */
 	(void)close(s_udp);

@@ -5,4 +5,4 @@
  * used and redistributed with our explicit permission.
  */ 
 
-void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath);
+void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets);
