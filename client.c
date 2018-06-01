@@ -576,16 +576,21 @@ void client_res_summary(/*@unused@*/ int sig) {
 	printf("%d lost pongs, %d timeouts, %f%% loss\n",
 			res_pongloss, res_timeout, loss);
 	if (res_rtt_max.tv_sec > 0)
-		printf("max: %ld.%09ld", res_rtt_max.tv_sec, res_rtt_max.tv_nsec);
+		printf("max: %ld.%09ld s", res_rtt_max.tv_sec, res_rtt_max.tv_nsec);
 	else
 		printf("max: %ld ns", res_rtt_max.tv_nsec);
 	loss = (float)res_rtt_total / (float)res_ok;
-	printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
-	printf(", stdev: %.0f ns", sqrt(res_rtt_m2 / (float)res_ok));
-	if (res_rtt_min.tv_sec > 0)
-		printf(", min: %ld.%09ld\n", res_rtt_min.tv_sec, res_rtt_min.tv_nsec);
+	//printf(", avg: %.0f ns (%.0f ns)", loss, res_rtt_mean);
+	if (res_rtt_mean >= 1000000000L)
+	    printf(", avg: %ld.%09ld s", (long int)res_rtt_mean / 1000000000L, (long int)res_rtt_mean % 1000000000L);
 	else
-		printf(", min: %ld ns\n", res_rtt_min.tv_nsec);
+	    printf(", avg: %.0f ns", res_rtt_mean);
+	if (res_rtt_min.tv_sec > 0)
+		printf(", min: %ld.%09ld s", res_rtt_min.tv_sec, res_rtt_min.tv_nsec);
+	else
+		printf(", min: %ld ns", res_rtt_min.tv_nsec);
+	printf(", stdev: %.0f ns\n", sqrt(res_rtt_m2 / (float)res_ok));
+
 	exit(0);
 }
 
