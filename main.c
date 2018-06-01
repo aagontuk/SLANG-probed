@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 	addr = "";
 	fifopath = "";
 	wait = "500";
-	npackets = "-1";
+	npackets = "2147483647"; /* INT_MAX */
 	count_server_resp = 0;
 	count_client_sent = 0;
 	count_client_done = 0;
