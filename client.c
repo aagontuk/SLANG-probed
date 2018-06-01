@@ -534,7 +534,7 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 				free(r);
 			}
 			/* Hack-y, but lets try it... */
-			if (seq_num + 1 > npackets)
+			if (seq_num > npackets)
 			    raise(SIGINT);
 			return;
 		}
