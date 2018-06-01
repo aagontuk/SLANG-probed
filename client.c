@@ -431,7 +431,6 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 		if (r->id == d->id &&
 			r->seq == d->seq &&
 			memcmp(&r->addr, &a->sin6_addr, sizeof r->addr) == 0) {
-			int seq_num = r->seq;
 			if (d->type == TYPE_PONG) {
 				r->state |= MASK_PONG;
 				/* Save T4 timestamp */
@@ -534,7 +533,7 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 				free(r);
 			}
 			/* Hack-y, but lets try it... */
-			if (res_ok > npackets)
+			if (res_ok >= npackets)
 			    raise(SIGINT);
 			return;
 		}
