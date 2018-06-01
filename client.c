@@ -523,7 +523,7 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 						res_rtt_total = res_rtt_total + rtt.tv_nsec;
 						
 						res_rtt_delta = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
-						res_rtt_mean += res_rtt_delta / (float)r->seq;
+						res_rtt_mean += res_rtt_delta / (float)res_ok;
 						res_rtt_delta2 = (rtt.tv_sec * 1000000000L + rtt.tv_nsec) - res_rtt_mean;
 						res_rtt_m2 += res_rtt_delta * res_rtt_delta2;
 					}
@@ -534,7 +534,7 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 				free(r);
 			}
 			/* Hack-y, but lets try it... */
-			if (seq_num > npackets)
+			if (res_ok > npackets)
 			    raise(SIGINT);
 			return;
 		}
