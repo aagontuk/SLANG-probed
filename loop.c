@@ -73,7 +73,7 @@ static void server_kill_peer(fd_set *fs, int *fd_max, int fd);
  * \param[in] cfgpath client_msess_reconf needs XML config
  * \bug       The 'first', not 'correct' TCP client socket will be used
  */
-void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets) {
+void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets, int thold) {
 	struct server_peer *p;
 	char addrstr[INET6_ADDRSTRLEN];
 	char byte;
@@ -167,7 +167,7 @@ void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets) 
 				}
 				/* CLIENT: Update results with received UDP PONG */
 				if (ok == 1 && rx->type == TYPE_PONG) {
-					client_res_update(&pkt.addr, rx, &pkt.ts, pkt.dscp, npackets);
+					client_res_update(&pkt.addr, rx, &pkt.ts, pkt.dscp, npackets, thold);
 				}
 			}
 			/* SERVER: TCP socket, accept timestamp connection */
@@ -218,7 +218,7 @@ void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets) 
 						syslog(LOG_INFO, "client: %s: Connected", addrstr);
 				} else if (ok == 1 && rx->type == TYPE_TIME) {
 					rx = (data_t *)&pkt.data;
-					client_res_update(&pkt.addr, rx, NULL, -1, npackets);
+					client_res_update(&pkt.addr, rx, NULL, -1, npackets, thold);
 				}
 			}
 			/* CLIENT: PIPE; send */

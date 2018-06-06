@@ -105,6 +105,8 @@ static int res_pongloss = 0;
 static int res_tserror = 0;
 static int res_dserror = 0;
 static int res_dup = 0;
+static int res_thold = -1;
+static int res_n_thold = 0;
 static double res_rtt_mean = 0;
 static double res_rtt_delta = 0;
 static double res_rtt_delta2 = 0;
@@ -431,7 +433,7 @@ void client_res_insert(addr_t *a, data_t *d, ts_t *ts) {
  * \param ts Pointer to a timestamp, such as T4
  * \warning  We wait until the next timestamp arrives, before printing
  */
-void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int npackets) {
+void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int npackets, int thold) {
 	struct res *r;
 	struct msess *s;
 	struct res_fifo r_fifo;
@@ -574,7 +576,10 @@ void client_res_update(addr_t *a, data_t *d, /*@null@*/ ts_t *ts, int dscp, int 
 						kernel_OH_delta2 = (now.tv_sec * 1000000000L + now.tv_nsec) - kernel_OH_mean;
 						kernel_OH_m2 += kernel_OH_delta * kernel_OH_delta2;
 						
-						
+						if (res_thold < 0)
+						    res_thold = thold;
+						if ((rtt.tv_sec * 1000000000L + rtt.tv_nsec) > res_thold)
+						    res_n_thold++;
 					}
 				}
 				/*@ -branchstate -onlytrans TODO wtf */
@@ -628,6 +633,7 @@ void client_res_summary(/*@unused@*/ int sig) {
 			res_ok, res_dserror, res_tserror, res_dup);
 	printf("%d lost pongs, %d timeouts, %f%% loss\n",
 			res_pongloss, res_timeout, loss);
+	printf("Threshold: %d ns, Percent of RTTs over threshold: %f %%", res_thold, (res_thold / (float)res_ok) * 100);
 	
 	printf("NIC -> NIC RTT - ");
 	if (res_rtt_max.tv_sec > 0)

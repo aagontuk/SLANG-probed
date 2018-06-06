@@ -33,7 +33,7 @@ static void reload(/*@unused@*/ int sig);
 int main(int argc, char *argv[]) {
 	int arg, s_udp, s_tcp, log;
 	enum tsmode tstamp;
-	char *addr, *iface, *port, *cfgpath, *fifopath, *wait, *npackets;
+	char *addr, *iface, *port, *cfgpath, *fifopath, *wait, *npackets, *thold;
 
 	/* Default settings */
 	cfgpath = "probed.conf";
@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
 	fifopath = "";
 	wait = "500";
 	npackets = "2147483646"; /* INT_MAX - 1 */
+	thold = "0";
 	count_server_resp = 0;
 	count_client_sent = 0;
 	count_client_done = 0;
@@ -60,7 +61,7 @@ int main(int argc, char *argv[]) {
 	/*@ -branchstate OK that opcode. etc changes storage @*/
 	/*@ -unrecog OK that 'getopt' and 'optarg' is missing; SPlint bug */
 	/* +charintliteral OK to compare 'arg' (int) int with char @*/
-	while ((arg = getopt(argc, argv, "hqf:i:p:w:n:kusc:d:")) != -1) {
+	while ((arg = getopt(argc, argv, "hqf:i:p:w:n:t:kusc:d:")) != -1) {
 		if (arg == (int)'h') help_and_die();
 		if (arg == (int)'?') exit(EXIT_FAILURE);
 		if (arg == (int)'q') log = 0;
@@ -69,6 +70,7 @@ int main(int argc, char *argv[]) {
 		if (arg == (int)'p') port = optarg;
 		if (arg == (int)'w') wait = optarg;
 		if (arg == (int)'n') npackets = optarg;
+		if (arg == (int)'t') thold = optarg;
 		if (arg == (int)'k') tstamp = KERNEL;
 		if (arg == (int)'u') tstamp = USERLAND;
 		if (arg == (int)'s') cfg.op = SERVER;
@@ -95,7 +97,7 @@ int main(int argc, char *argv[]) {
 	if (cfg.op == SERVER) {
 		syslog(LOG_INFO, "Server mode: waiting for PINGs\n");
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets), atoi(thold));
 	} else if (cfg.op == CLIENT) {
 		/* Create PING results array */
 		client_init();
@@ -107,7 +109,7 @@ int main(int argc, char *argv[]) {
 		/* Print results on Ctrl+C */
 		(void)signal(SIGINT, client_res_summary);
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets), atoi(thold));
 	} else { /* Implicit cfg.op == DAEMON */
 		p("Daemon mode; both server and client, output to pipe");
 		/* Create PING results array and FIFO */
@@ -119,7 +121,7 @@ int main(int argc, char *argv[]) {
 		/* When loop_or_die starts, reload config immediatelly */
 		cfg.should_reload = 1;
 		/* Launch */
-		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets));
+		loop_or_die(s_udp, s_tcp, port, cfgpath, atoi(npackets), atoi(thold));
 	}
 	/* We will never get here */
 	(void)close(s_udp);
