@@ -633,7 +633,7 @@ void client_res_summary(/*@unused@*/ int sig) {
 			res_ok, res_dserror, res_tserror, res_dup);
 	printf("%d lost pongs, %d timeouts, %f%% loss\n",
 			res_pongloss, res_timeout, loss);
-	printf("Threshold: %d ns, Percent of RTTs over threshold: %f %%", res_thold, (res_thold / (float)res_ok) * 100);
+	printf("Threshold: %d ns, Percent of RTTs over threshold: %f %%\n", res_thold, (res_n_thold / (float)res_ok) * 100);
 	
 	printf("NIC -> NIC RTT - ");
 	if (res_rtt_max.tv_sec > 0)
