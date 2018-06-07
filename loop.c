@@ -182,11 +182,12 @@ void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets, 
 					ok = 0;
 				}
 				if (ok == 1 && addr2str(&addr_tmp, addrstr) == 0) {
-					if (nclients > 0 && cfg.lm == ENABLED)
+					if (nclients > 0 && cfg.lm == ENABLED) {
 					    ok = 0;
-					else
+					} else {
 					    syslog(LOG_INFO, "server: %s: %d: Connected", addrstr, fd);
 					    nclients++;
+					}
 				}
 				else
 					ok = 0;
