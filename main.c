@@ -152,6 +152,7 @@ static void help_and_die(void) {
 	p("\t-k        Create timestamps in kernel driver instead of hardware");
 	p("\t-u        Create timestamps in userland instead of hardware");
 	p("\t-q        Be quiet, log to syslog only");
+	p("\t-l        Disable simultaneous connections");
 	exit(EXIT_FAILURE);
 }
 
