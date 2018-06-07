@@ -51,9 +51,14 @@ enum tsmode {
 	KERNEL,
 	USERLAND
 };
+enum lockmode {
+    DISABLED,
+    ENABLED
+};
 struct config {
 	enum tsmode ts; /* timestamping type */
 	enum opmode op; /* operation mode */
+	enum lockmode lm;
 	int fifo; /* file descriptor to named pipe for daemon mode */
 	volatile sig_atomic_t should_reload;
 	volatile sig_atomic_t should_clear_timeouts;

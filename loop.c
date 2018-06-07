@@ -42,6 +42,7 @@ static LIST_HEAD(peers_listhead, server_peer) peers_head;
 
 static int server_find_peer_fd(addr_t *addr);
 static void server_kill_peer(fd_set *fs, int *fd_max, int fd);
+static unsigned int nclients;
 
 /**
  * Main SLA-NG 'probed' state machine, handling all client/server stuff
@@ -180,8 +181,13 @@ void loop_or_die(int s_udp, int s_tcp, char *port, char *cfgpath, int npackets, 
 					syslog(LOG_ERR, "accept: %s", strerror(errno));
 					ok = 0;
 				}
-				if (ok == 1 && addr2str(&addr_tmp, addrstr) == 0)
-					syslog(LOG_INFO, "server: %s: %d: Connected", addrstr, fd);
+				if (ok == 1 && addr2str(&addr_tmp, addrstr) == 0) {
+					if (nclients > 0 && cfg.lm == ENABLED)
+					    ok = 0;
+					else
+					    syslog(LOG_INFO, "server: %s: %d: Connected", addrstr, fd);
+					    nclients++;
+				}
 				else
 					ok = 0;
 				if (ok == 1) {
@@ -354,6 +360,7 @@ static void server_kill_peer(fd_set *fs, int *fd_max, int fd) {
 			syslog(LOG_INFO, "server: %s: %d: Disconnected", addrstr, fd);
 		} else syslog(LOG_INFO, "server: %d: Disconnected", fd);
 	} else syslog(LOG_INFO, "server: %d: Disconnected", fd);
+	nclients--;
 	/* Remove linked list */
 	for (p = peers_head.lh_first; p != NULL; p = p->list.le_next) {
 		if (p->fd == fd) {
