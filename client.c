@@ -680,6 +680,28 @@ void client_res_summary(/*@unused@*/ int sig) {
 		printf(", min: %ld ns", kernel_OH_min.tv_nsec);
 	printf(", stdev: %.0f ns\n", sqrt(kernel_OH_m2 / (float)res_ok));
 
+    if (cfg.fs == ON) {
+        FILE *outfile = fopen("probed_out.csv", "w");
+        if (outfile != NULL) {
+            fprintf(outfile, "rtt_max,rtt_min,rtt_mean,rtt_stdev,");
+            fprintf(outfile, "total_rtt_max,total_rtt_min,total_rtt_mean,total_rtt_stdev,");
+            fprintf(outfile, "oh_max,oh_min,oh_mean,oh_stdev,");
+            fprintf(outfile, "ok_reqs,dscp_errors,ts_errors,unknown_or_dups,");
+	        fprintf(outfile, "lost_pongs,timeouts,pct_loss,");
+	        fprintf(outfile, "thold,pct_over_thold,");
+            fprintf(outfile, "units\n");
+            fprintf(outfile, "%ld,%ld,%.2f,%.2f,", (res_rtt_max.tv_sec*1000000000L)+res_rtt_max.tv_nsec,(res_rtt_min.tv_sec*1000000000L)+res_rtt_min.tv_nsec,res_rtt_mean,sqrt(res_rtt_m2 / (float)res_ok));
+            fprintf(outfile, "%ld,%ld,%.2f,%.2f,", (total_rtt_max.tv_sec*1000000000L)+total_rtt_max.tv_nsec,(total_rtt_min.tv_sec*1000000000L)+total_rtt_min.tv_nsec,total_rtt_mean,sqrt(total_rtt_m2 / (float)res_ok));
+            fprintf(outfile, "%ld,%ld,%.2f,%.2f,", (kernel_OH_max.tv_sec*1000000000L)+kernel_OH_max.tv_nsec,(kernel_OH_min.tv_sec*1000000000L)+kernel_OH_min.tv_nsec,kernel_OH_mean,sqrt(kernel_OH_m2 / (float)res_ok));
+            fprintf(outfile, "%d,%d,%d,%d,", res_ok, res_dserror, res_tserror, res_dup);
+            fprintf(outfile, "%d,%d,%f,", res_pongloss, res_timeout, loss);
+            fprintf(outfile, "%d,%f,", res_thold, (res_n_thold / (float)res_ok) * 100);
+            fprintf(outfile, "ns");
+            fclose(outfile);
+        } else {
+            syslog(LOG_ERR, "Output file could not be created");
+        }
+    }
 	exit(0);
 }
 

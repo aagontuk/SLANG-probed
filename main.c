@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
 	iface = "eth0"; /* Why not, Linux standard */
 	port = "60666"; /* Sexy port */
 	cfg.op = HELP; /* Operation mode */
-	cfg.op = DISABLED;
+	cfg.lm = DISABLED;
+	cfg.fs = OFF;
 	tstamp = HARDWARE; /* Timestamp mode */
 	addr = "";
 	fifopath = "";
@@ -62,7 +63,7 @@ int main(int argc, char *argv[]) {
 	/*@ -branchstate OK that opcode. etc changes storage @*/
 	/*@ -unrecog OK that 'getopt' and 'optarg' is missing; SPlint bug */
 	/* +charintliteral OK to compare 'arg' (int) int with char @*/
-	while ((arg = getopt(argc, argv, "hqf:i:p:w:n:t:kuslc:d:")) != -1) {
+	while ((arg = getopt(argc, argv, "hqf:i:p:w:n:t:kusloc:d:")) != -1) {
 		if (arg == (int)'h') help_and_die();
 		if (arg == (int)'?') exit(EXIT_FAILURE);
 		if (arg == (int)'q') log = 0;
@@ -76,6 +77,7 @@ int main(int argc, char *argv[]) {
 		if (arg == (int)'u') tstamp = USERLAND;
 		if (arg == (int)'s') cfg.op = SERVER;
 		if (arg == (int)'l') cfg.lm = ENABLED;
+		if (arg == (int)'o') cfg.fs = ON;
 		if (arg == (int)'d') {
 			cfg.op = DAEMON;
 			fifopath = optarg;
@@ -152,7 +154,6 @@ static void help_and_die(void) {
 	p("\t-k        Create timestamps in kernel driver instead of hardware");
 	p("\t-u        Create timestamps in userland instead of hardware");
 	p("\t-q        Be quiet, log to syslog only");
-	p("\t-l        Disable simultaneous connections");
 	exit(EXIT_FAILURE);
 }
 
