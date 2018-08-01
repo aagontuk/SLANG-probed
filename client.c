@@ -318,6 +318,7 @@ pid_t client_fork(int pipe, addr_t *server) {
 	char log[100];
 	ts_t zero;
 	socklen_t slen;
+	int fail = 0;
 
 	if (addr2str(server, addrstr) < 0)
 		return -1;
@@ -360,10 +361,10 @@ pid_t client_fork(int pipe, addr_t *server) {
 			continue;
 		}
 		while (1 == 1) {
-			/* We use a 1 minute read timeout, otherwise reconnect */
+			/* We use a 30 second read timeout, otherwise reconnect */
 			unix_fd_zero(&fs);
 			unix_fd_set(sock, &fs);
-			tv.tv_sec = 60;
+			tv.tv_sec = 30;
 			tv.tv_usec = 0;
 			if (select(sock + 1, &fs, NULL, NULL, &tv) < 0) {
 				syslog(LOG_ERR, "%s select: %s", log, strerror(errno));
@@ -382,8 +383,11 @@ pid_t client_fork(int pipe, addr_t *server) {
 		syslog(LOG_ERR, "%s Connection lost", log);
 		(void)close(sock);
 		(void)sleep(1);
+		fail += 1;
+		/* 3 minute overall timeout period, then exit with failure */
+		if (fail >=6) exit(EXIT_FAILURE);
 	}
-	exit(EXIT_FAILURE);
+	
 }
 
 /**
