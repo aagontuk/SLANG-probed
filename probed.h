@@ -27,14 +27,14 @@
 #define TYPE_HELO 4
 #define TYPE_SEND 5
 
-int count_server_resp;
-int count_client_sent;
-int count_client_done;
-int count_client_find;
-int count_client_fifoq;
-int count_client_fifoq_max;
-int last_tx_id;
-int last_tx_seq;
+extern int count_server_resp;
+extern int count_client_sent;
+extern int count_client_done;
+extern int count_client_find;
+extern int count_client_fifoq;
+extern int count_client_fifoq_max;
+extern int last_tx_id;
+extern int last_tx_seq;
 
 typedef struct timespec ts_t;
 typedef struct sockaddr_in6 addr_t;

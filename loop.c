@@ -44,6 +44,8 @@ static int server_find_peer_fd(addr_t *addr);
 static void server_kill_peer(fd_set *fs, int *fd_max, int fd);
 static unsigned int nclients;
 
+int count_server_resp;
+
 /**
  * Main SLA-NG 'probed' state machine, handling all client/server stuff
  *

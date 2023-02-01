@@ -130,6 +130,14 @@ static pid_t client_fork(int pipe, addr_t *server);
 static int client_msess_isaddrtaken(addr_t *addr, num_t id);
 static void client_write_fifo(struct res_fifo *r_fifo);
 
+int count_client_sent;
+int count_client_done;
+int count_client_find;
+int count_client_fifoq;
+int count_client_fifoq_max;
+int last_tx_id;
+int last_tx_seq;
+
 /**
  * Initializes global variables
  *
